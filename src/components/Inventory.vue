@@ -1,68 +1,70 @@
 <script>
-    export default {
-        data() {
-            return {
-                grid: Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => null)), // Сетка 5x5
-                draggedItem: null, // Перетаскиваемый элемент
-                draggedItemPosition: { row: null, col: null }, // Позиция перетаскиваемого элемента
-                externalItem: ' ', // Внешний перетаскиваемый элемент
-            };
+import Item from './icons/item.vue';
+
+export default {
+    data() {
+        return {
+            grid: Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => false)), // Сетка 5x5, false = пустая ячейка
+            draggedItem: null, // Перетаскиваемый элемент
+            draggedItemPosition: { row: null, col: null }, // Позиция перетаскиваемого элемента
+        };
+    },
+    mounted() {
+        this.loadFromLocalStorage();
+    },
+    methods: {
+        // Инициализация или загрузка из localStorage
+        loadFromLocalStorage() {
+            const savedGrid = localStorage.getItem('gridState');
+            this.grid = savedGrid 
+                ? JSON.parse(savedGrid)
+                : Array.from({ length: 5 }, () => Array(5).fill(null));
         },
-        mounted() {
-            this.loadFromLocalStorage();
+        // Сохранение в localStorage
+        saveToLocalStorage() {
+            localStorage.setItem('gridState', JSON.stringify(this.grid));
         },
-        methods: {
-            // Инициализация или загрузка из localStorage
-            loadFromLocalStorage() {
-                const savedGrid = localStorage.getItem('gridState');
-                this.grid = savedGrid 
-                    ? JSON.parse(savedGrid)
-                    : Array.from({ length: 5 }, () => Array(5).fill(null));
-            },
 
-            // Сохранение в localStorage
-            saveToLocalStorage() {
-                localStorage.setItem('gridState', JSON.stringify(this.grid));
-            },
-
-            // Начало перетаскивания элемента из сетки
-            onDragStart(event, row, col) {
-                this.draggedItem = this.grid[row][col];
-                this.draggedItemPosition = { row, col };
-                event.dataTransfer.setData('text/plain', ''); // Требуется для Firefox
-            },
-
-            // Начало перетаскивания внешнего элемента
-            onDragStartExternal(event) {
-                this.draggedItem = this.externalItem;
-                this.draggedItemPosition = { row: null, col: null }; // Внешний элемент не имеет позиции в сетке
-                event.dataTransfer.setData('text/plain', '');
-            },
-
-            // Элемент перетаскивается над ячейкой
-            onDragOver(event) {
-                event.preventDefault(); // Разрешаем drop
-            },
-
-            // Элемент отпущен в ячейке
-            onDrop(event, row, col) {
-                event.preventDefault();
-
-                // Если элемент перетаскивается из сетки, удаляем его из старой позиции
-                if (this.draggedItemPosition.row !== null && this.draggedItemPosition.col !== null) {
-                    this.grid[this.draggedItemPosition.row][this.draggedItemPosition.col] = null;
-                }
-
-                // Размещаем элемент в новой позиции
-                this.grid[row][col] = this.draggedItem;
-
-                // Сбрасываем состояние перетаскивания и сохраняем
-                this.draggedItem = null;
-                this.draggedItemPosition = { row: null, col: null };
-                this.saveToLocalStorage();
-            },
+        // Начало перетаскивания элемента из сетки
+        onDragStart(event, row, col) {
+            this.draggedItem = true; // Указываем, что элемент перетаскивается
+            this.draggedItemPosition = { row, col };
+            event.dataTransfer.setData('text/plain', ''); // Требуется для Firefox
         },
-    };
+        // Начало перетаскивания внешнего элемента
+        onDragStartExternal(event) {
+            this.draggedItem = true; // Указываем, что внешний элемент перетаскивается
+            this.draggedItemPosition = { row: null, col: null }; // Внешний элемент не имеет позиции в сетке
+            event.dataTransfer.setData('text/plain', '');
+        },
+
+        // Элемент перетаскивается над ячейкой
+        onDragOver(event) {
+            event.preventDefault(); // Разрешаем drop
+        },
+
+        // Элемент отпущен в ячейке
+        onDrop(event, row, col) {
+            event.preventDefault();
+
+            // Если элемент перетаскивается из сетки, удаляем его из старой позиции
+            if (this.draggedItemPosition.row !== null && this.draggedItemPosition.col !== null) {
+                this.grid[this.draggedItemPosition.row][this.draggedItemPosition.col] = false;
+            }
+
+            // Размещаем элемент в новой позиции
+            this.grid[row][col] = true;
+
+            // Сбрасываем состояние перетаскивания
+            this.draggedItem = null;
+            this.draggedItemPosition = { row: null, col: null };
+            this.saveToLocalStorage();
+        },
+    },
+    components : {
+        Item,
+    },
+};
 </script>
 
 <template>
@@ -73,20 +75,7 @@
             draggable="true"
             @dragstart="onDragStartExternal"
         >
-            <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect y="6" width="48" height="48" fill="#7FAA65"/>
-                <g filter="url(#filter0_b_0_17)">
-                    <rect x="6" width="48" height="48" fill="#B8D998" fill-opacity="0.35"/>
-                </g>
-                <defs>
-                    <filter id="filter0_b_0_17" x="-6" y="-12" width="72" height="72" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                        <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-                        <feGaussianBlur in="BackgroundImageFix" stdDeviation="6"/>
-                        <feComposite in2="SourceAlpha" operator="in" result="effect1_backgroundBlur_0_17"/>
-                        <feBlend mode="normal" in="SourceGraphic" in2="effect1_backgroundBlur_0_17" result="shape"/>
-                    </filter>
-                </defs>
-            </svg>
+            <Item />
         </div>
 
         <!-- Сетка 5x5 -->
@@ -109,13 +98,14 @@
                     @dragover.prevent="onDragOver"
                     @drop="onDrop($event, rowIndex, colIndex)"
                 >
+                    <!-- Отображаем SVG, если ячейка занята -->
                     <div
                         v-if="cell"
                         class="draggable-item"
                         draggable="true"
                         @dragstart="onDragStart($event, rowIndex, colIndex)"
                     >
-                        {{ cell }}
+                        <Item />
                     </div>
                 </div>
             </div>
@@ -146,11 +136,6 @@
 }
 
 .draggable-item {
-    background-position: center;
-    background-repeat: no-repeat;
-    min-height: 95px;
-    min-width: 95px;
-    background-image: url(/img/item.svg);
     cursor: grab;
     user-select: none;
 }
