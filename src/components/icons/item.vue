@@ -1,3 +1,12 @@
+<script>
+export default {
+  props: {
+    size: { type: [Number, String], default: 54 },
+    color: { type: String, default: '#7FAA65' },
+  },
+};
+</script>
+
 <template>
   <svg
     :width="size"
@@ -8,7 +17,7 @@
   >
     <rect y="6" width="48" height="48" :fill="color" />
     <g filter="url(#filter0_b_0_17)">
-      <rect x="6" width="48" height="48" fill="#B8D998" fill-opacity="0.35" />
+      <rect x="6" width="48" height="48" :fill="color" fill-opacity="0.35" />
     </g>
     <defs>
       <filter id="filter0_b_0_17" x="-6" y="-12" width="72" height="72" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
@@ -20,12 +29,3 @@
     </defs>
   </svg>
 </template>
-
-<script>
-export default {
-  props: {
-    size: { type: [Number, String], default: 54 },
-    color: { type: String, default: '#7FAA65' },
-  },
-};
-</script>
